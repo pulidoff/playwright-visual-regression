@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main, master]
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -28,7 +31,42 @@ jobs:
         run: npx playwright install chromium --with-deps
 
       - name: Run visual regression tests
+        id: run_tests
         run: npx playwright test
+        continue-on-error: true
+
+      - name: Generate missing Linux baselines
+        if: steps.run_tests.outcome == 'failure'
+        run: npx playwright test --update-snapshots || true
+
+      - name: Commit and push new Linux baselines
+        if: steps.run_tests.outcome == 'failure' && github.event_name == 'push'
+        id: push_baselines
+        run: |
+          # Restore any modified tracked snapshots to avoid overwriting baselines
+          # that differ due to a real regression (only untracked = genuinely new files)
+          git checkout -- snapshots/ 2>/dev/null || true
+          NEW=$(git ls-files --others --exclude-standard snapshots/)
+          if [ -z "$NEW" ]; then
+            echo "committed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "$NEW" | xargs git add
+          git commit -m "ci: auto-generate Linux baselines [skip ci]"
+          git push
+          echo "committed=true" >> $GITHUB_OUTPUT
+
+      - name: Re-run tests after baseline generation
+        if: steps.push_baselines.outputs.committed == 'true'
+        run: npx playwright test
+
+      - name: Fail if tests failed without generating new baselines
+        if: steps.run_tests.outcome == 'failure' && steps.push_baselines.outputs.committed != 'true'
+        run: |
+          echo "::error::Tests failed. Either there are visual regressions, or Linux baselines are missing on a pull request. Push to main to trigger auto-generation, or run 'npx playwright test --update-snapshots' locally and commit the Linux snapshots."
+          exit 1
 
       - name: Upload test results on failure
         if: failure()

@@ -63,6 +63,21 @@ git add snapshots/
 git commit -m "chore: update visual baselines"
 ```
 
+## Snapshot baselines
+
+Playwright names snapshots automatically by operating system:
+
+| Platform | File pattern |
+|----------|-------------|
+| Windows (local) | `snapshots/**/*-chromium-win32.png` |
+| Linux (CI) | `snapshots/**/*-chromium-linux.png` |
+
+**First CI run:** when no Linux baselines exist the workflow runs `--update-snapshots`, commits only the new files (untracked by git), and re-runs the tests. The commit message includes `[skip ci]` to prevent a loop.
+
+**Subsequent runs:** tests compare against the committed Linux baselines. If a test fails because of a real regression — not a missing file — no new baselines are committed and the build fails so the diff can be reviewed.
+
+**Pull requests:** auto-generation only triggers on pushes to `main`/`master`. If a PR introduces new tests that need Linux baselines, merge to main first (or generate them locally and commit).
+
 ## CI behavior
 
 - Tests run on every push and pull request to `main`/`master`.
