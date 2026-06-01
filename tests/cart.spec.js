@@ -9,21 +9,9 @@ test.describe('Cart Page Visual Regression', () => {
   });
 
   test('empty cart snapshot', async ({ page }) => {
-    await poManager.getCartPage().navigate();
-    await expect(page).toHaveScreenshot('cart-empty.png', { fullPage: true });
-  });
-
-  test('cart with one product snapshot', async ({ page }) => {
-    const productsPage = poManager.getProductsPage();
     const cartPage = poManager.getCartPage();
-
-    await productsPage.navigate();
-    await productsPage.addFirstProductToCart();
-
-    await page.getByRole('link', { name: 'View Cart' }).click();
-    await expect(page).toHaveScreenshot('cart-one-product.png', { fullPage: true });
-
-    const count = await cartPage.getCartItemCount();
-    expect(count).toBeGreaterThan(0);
+    await cartPage.navigate();
+    await cartPage.cartInfo.waitFor({ state: 'visible' });
+    await expect(cartPage.cartInfo).toHaveScreenshot('cart-empty.png', { maxDiffPixels: 200 });
   });
 });

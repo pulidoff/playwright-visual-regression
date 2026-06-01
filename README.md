@@ -78,6 +78,22 @@ Playwright names snapshots automatically by operating system:
 
 **Pull requests:** auto-generation only triggers on pushes to `main`/`master`. If a PR introduces new tests that need Linux baselines, merge to main first (or generate them locally and commit).
 
+## Testing strategy
+
+Full-page screenshots are avoided on pages that contain dynamic content (ads, rotating carousels, live product counts, session-dependent widgets). A single pixel difference anywhere on the page would fail the test even when the actual UI area under test is perfectly stable, producing noisy, unreliable suites.
+
+Instead, each test targets the smallest stable DOM element that exercises the visual contract for that page:
+
+| Page | Element tested | Rationale |
+|------|---------------|-----------|
+| Homepage | `nav` header | Constant across sessions; verifies branding and nav links |
+| Homepage | Slider container | Bounded area; animation is paused by Playwright's headless mode |
+| Homepage | Featured items section | Product grid layout; stable structure even if prices change slightly |
+| Products | `.features_items` after search | Search results for a fixed query are deterministic |
+| Cart | `#cart_info` | Self-contained table; no surrounding ads or recommendations |
+
+The `waitFor({ state: 'visible' })` call before each screenshot ensures the target element has finished rendering before the comparison is made. The `maxDiffPixels: 200` tolerance absorbs minor sub-pixel rendering differences between OS versions without hiding real layout regressions.
+
 ## CI behavior
 
 - Tests run on every push and pull request to `main`/`master`.

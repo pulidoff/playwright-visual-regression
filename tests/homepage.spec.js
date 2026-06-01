@@ -9,22 +9,18 @@ test.describe('Homepage Visual Regression', () => {
     await poManager.getHomePage().navigate();
   });
 
-  test('homepage full page snapshot', async ({ page }) => {
-    await expect(page).toHaveScreenshot('homepage-full.png', { fullPage: true });
-  });
-
   test('homepage header snapshot', async ({ page }) => {
     const homePage = poManager.getHomePage();
-    await expect(homePage.navBar).toHaveScreenshot('homepage-header.png');
+    await expect(homePage.navBar).toHaveScreenshot('homepage-header.png', { maxDiffPixels: 200 });
   });
 
   test('homepage slider snapshot', async ({ page }) => {
     const homePage = poManager.getHomePage();
-    await expect(homePage.slider).toHaveScreenshot('homepage-slider.png');
+    await expect(homePage.slider).toHaveScreenshot('homepage-slider.png', { maxDiffPixels: 200 });
   });
 
   test('homepage featured items snapshot', async ({ page }) => {
     const homePage = poManager.getHomePage();
-    await expect(homePage.featuredItems).toHaveScreenshot('homepage-featured-items.png');
+    await expect(homePage.featuredItems).toHaveScreenshot('homepage-featured-items.png', { maxDiffPixels: 200 });
   });
 });

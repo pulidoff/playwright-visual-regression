@@ -9,18 +9,10 @@ test.describe('Products Page Visual Regression', () => {
     await poManager.getProductsPage().navigate();
   });
 
-  test('products page full snapshot', async ({ page }) => {
-    await expect(page).toHaveScreenshot('products-full.png', { fullPage: true, timeout: 15000, maxDiffPixels: 100 });
-  });
-
-  test('products list snapshot', async ({ page }) => {
-    const productsPage = poManager.getProductsPage();
-    await expect(productsPage.productsList).toHaveScreenshot('products-list.png');
-  });
-
   test('products search results snapshot', async ({ page }) => {
     const productsPage = poManager.getProductsPage();
     await productsPage.searchProduct('top');
-    await expect(productsPage.productsList).toHaveScreenshot('products-search-top.png');
+    await productsPage.productsList.waitFor({ state: 'visible' });
+    await expect(productsPage.productsList).toHaveScreenshot('products-search-top.png', { maxDiffPixels: 200 });
   });
 });

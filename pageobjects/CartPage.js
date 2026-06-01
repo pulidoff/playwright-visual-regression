@@ -1,6 +1,7 @@
 class CartPage {
   constructor(page) {
     this.page = page;
+    this.cartInfo = page.locator('#cart_info');
     this.cartItems = page.locator('#cart_info_table tbody tr');
     this.emptyCartMessage = page.locator('#empty_cart');
     this.proceedToCheckoutBtn = page.getByText('Proceed To Checkout');
