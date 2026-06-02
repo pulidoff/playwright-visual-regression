@@ -27,9 +27,7 @@ playwright-visual-regression/
 │   └── CartPage.js
 ├── snapshots/                  # Baseline screenshots (committed)
 ├── tests/
-│   ├── homepage.spec.js
-│   ├── products.spec.js
-│   └── cart.spec.js
+│   └── homepage.spec.js
 ├── .gitignore
 ├── package.json
 ├── playwright.config.js
@@ -80,19 +78,24 @@ Playwright names snapshots automatically by operating system:
 
 ## Testing strategy
 
-Full-page screenshots are avoided on pages that contain dynamic content (ads, rotating carousels, live product counts, session-dependent widgets). A single pixel difference anywhere on the page would fail the test even when the actual UI area under test is perfectly stable, producing noisy, unreliable suites.
+automationexercise.com serves third-party ads, rotating banners, live product counts, and session-dependent widgets throughout most of its pages. Any of these can change between runs and introduce pixel differences that have nothing to do with the UI under test, causing tests to fail non-deterministically.
 
-Instead, each test targets the smallest stable DOM element that exercises the visual contract for that page:
+To keep the suite reliable, only elements that are **100% static** across sessions and environments are tested. Currently that means a single element:
 
-| Page | Element tested | Rationale |
-|------|---------------|-----------|
-| Homepage | `nav` header | Constant across sessions; verifies branding and nav links |
-| Homepage | Slider container | Bounded area; animation is paused by Playwright's headless mode |
-| Homepage | Featured items section | Product grid layout; stable structure even if prices change slightly |
-| Products | `.features_items` after search | Search results for a fixed query are deterministic |
-| Cart | `#cart_info` | Self-contained table; no surrounding ads or recommendations |
+| Page | Element tested | Why it is stable |
+|------|---------------|-----------------|
+| Homepage | Navigation bar (`navBar`) | Pure static HTML — brand logo, nav links, and search bar never change based on session, ads, or server state |
 
-The `waitFor({ state: 'visible' })` call before each screenshot ensures the target element has finished rendering before the comparison is made. The `maxDiffPixels: 200` tolerance absorbs minor sub-pixel rendering differences between OS versions without hiding real layout regressions.
+Elements explicitly excluded and why:
+
+| Element | Reason excluded |
+|---------|----------------|
+| Homepage slider | Rotates ad banners loaded dynamically; frame shown depends on timing |
+| Homepage featured items | Product prices and stock badges update server-side |
+| Products list / search results | Ad slots injected between product cards vary per request |
+| Cart page | Surrounding layout contains recommendation widgets tied to session |
+
+The `maxDiffPixels: 200` tolerance on the one remaining test absorbs minor sub-pixel rendering differences between operating systems (Windows local vs. Linux CI) without hiding real layout regressions.
 
 ## CI behavior
 

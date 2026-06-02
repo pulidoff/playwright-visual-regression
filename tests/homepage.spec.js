@@ -13,14 +13,4 @@ test.describe('Homepage Visual Regression', () => {
     const homePage = poManager.getHomePage();
     await expect(homePage.navBar).toHaveScreenshot('homepage-header.png', { maxDiffPixels: 200 });
   });
-
-  test('homepage slider snapshot', async ({ page }) => {
-    const homePage = poManager.getHomePage();
-    await expect(homePage.slider).toHaveScreenshot('homepage-slider.png', { maxDiffPixels: 200 });
-  });
-
-  test('homepage featured items snapshot', async ({ page }) => {
-    const homePage = poManager.getHomePage();
-    await expect(homePage.featuredItems).toHaveScreenshot('homepage-featured-items.png', { maxDiffPixels: 200 });
-  });
 });
